@@ -1,3 +1,4 @@
+#pragma GCC optimize "O3"
 
 #include <iostream>
 #include <string>
@@ -313,6 +314,20 @@ void getBruteForceAllPaths (const PositionVec& explorePoints, std::vector<MovePa
     }
 }
 
+void readLevelData()
+{
+    std::vector<char>::iterator cursor = level.begin();
+    for (int i = 0; i < R; i++) // read level info
+    {
+        std::string ROW; // C of the characters in '#.TC?' (i.e. one line of the ASCII maze).
+        std::cin >> ROW; std::cin.ignore();
+        std::cerr << ROW << std::endl;
+        std::copy(ROW.begin(), ROW.end(), cursor);
+        cursor += ROW.size();
+    }
+
+}
+
 int main()
 {
     std::cin >> R >> C >> A; std::cin.ignore();
@@ -326,10 +341,8 @@ int main()
     Position posT;
     MovePath currentPath;
     size_t currentPathPos;
-    std::vector<char>::iterator cursor;
     PositionVec explorePoints;
     std::vector<MovePath> explorePaths;
-
 
     // game loop
     while (1)
@@ -342,15 +355,7 @@ int main()
             knowT = true;
         }
 
-        cursor = level.begin();
-        for (int i = 0; i < R; i++) // read level info
-        {
-            std::string ROW; // C of the characters in '#.TC?' (i.e. one line of the ASCII maze).
-            std::cin >> ROW; std::cin.ignore();
-            std::cerr << ROW << std::endl;
-            std::copy(ROW.begin(), ROW.end(), cursor);
-            cursor += ROW.size();
-        }
+        readLevelData();
 
         if(!knowC)
         {
@@ -389,6 +394,6 @@ int main()
             currentPath = getShortestPath(pathsToT);
             currentPathPos = 0;
         }
-
+        exit(0);
     }
 }
