@@ -1,4 +1,4 @@
-#pragma GCC optimize "O3"
+#pragma GCC optimize "O3,omit-frame-pointer,inline"
 
 #include <iostream>
 #include <string>
@@ -7,6 +7,7 @@
 #include <unordered_map>
 #include <numeric>
 #include <list>
+#include <memory>
 
 /**
  * Auto-generated code below aims at helping you parse
@@ -23,6 +24,8 @@ enum class Direction
 
 struct Position
 {
+    Position() : row(0), col(0) {}
+    Position(int r, int c) : row(r), col(c){}
     inline bool operator ==(const Position& posOther) const
     {
         return ((this->row == posOther.row) && (this->col == posOther.col));
@@ -158,6 +161,8 @@ inline MovePath getMovePath(PositionPath& posPath)
     return movePath;
 }
 
+
+
 inline void getPaths(const Position& from, const Position& to, std::vector<MovePath>& outPaths)
 {
     std::list<PositionPath> listOfPathsAsPositions;
@@ -235,7 +240,6 @@ inline int getExploredPercent(std::vector<char> vec)
 
 void getListOfPossibleExplorePoints(PositionVec& outPoints)
 {
-    outPoints.clear();
     for(size_t walk = 0; walk < level.size(); walk++)
     {
         Position currentPos = getPos(walk);
@@ -314,6 +318,79 @@ void getBruteForceAllPaths (const PositionVec& explorePoints, std::vector<MovePa
     }
 }
 
+struct Node;
+
+struct Node
+{
+    explicit Node():
+        pos(0,0),
+        parent(nullptr),
+        child(nullptr),
+        sibling(nullptr)
+    {
+
+    }
+    Node(const Node&) = delete;
+    Node& operator=(const Node&) = delete;
+    ~Node() = default;
+
+    void addChild(const Position& pos)
+    {
+        child = std::make_unique<Node>();
+        child->pos =  pos;
+        child->setParent(this);
+    }
+    void addSibling(const Position& pos)
+    {
+        sibling = std::make_unique<Node>();
+        sibling->pos = pos;
+        sibling->setParent(parent);
+    }
+    void setParent(Node* node)
+    {
+        parent = node;
+    }
+    Position pos;
+    Node * parent;
+    std::unique_ptr<Node> child;
+    std::unique_ptr<Node> sibling;
+};
+
+
+struct Graph
+{
+    Graph(const Position& pos)
+    {
+        rootNode = std::make_unique<Node>();
+        rootNode->pos = pos;
+        paths.emplace_back();
+        paths.back().emplace_back(pos);
+    }
+
+    inline void growNetwork()
+    {
+
+    }
+
+
+
+    std::unique_ptr<Node> rootNode;
+    std::vector<PositionPath> paths;
+};
+
+
+
+inline void getPathsBFS(const Position& from, const Position& to, std::vector<MovePath>& outPaths)
+{
+
+    Graph fromGraph(from);
+    Graph toGraph(to);
+
+
+
+}
+
+
 void readLevelData()
 {
     std::vector<char>::iterator cursor = level.begin();
@@ -362,6 +439,7 @@ int main()
             knowC = findSymbol('C', posC);
         }
 
+        explorePoints.clear();
         getListOfPossibleExplorePoints(explorePoints);
 
 
