@@ -124,38 +124,6 @@ inline bool moveRC(const Position& pos, Direction dir, Position& outPos )
     return retVal;
 }
 
-inline bool validToMove(char c)
-{
-    return (c == '.') || (c == 'T') || (c == 'C');
-}
-/*
-inline PositionVec getNextPossiblePositions(PositionVec& path)
-{
-    PositionVec result;
-    Position nextPos;
-    nextPos = moveRC(path.back(), Direction::LEFT);
-    if(validToMove(getVal(nextPos))  && !(std::find(path.rbegin(), path.rend(), nextPos) != path.rend()))
-    {
-        result.emplace_back(nextPos);
-    }
-    nextPos = moveRC(path.back(), Direction::RIGHT);
-    if(validToMove(getVal(nextPos)) && !(std::find(path.rbegin(), path.rend(), nextPos) != path.rend()))
-    {
-        result.emplace_back(nextPos);
-    }
-    nextPos = moveRC(path.back(), Direction::UP);
-    if(validToMove(getVal(nextPos)) && !(std::find(path.rbegin(), path.rend(), nextPos) != path.rend()))
-    {
-        result.emplace_back(nextPos);
-    }
-    nextPos = moveRC(path.back(), Direction::DOWN);
-    if(validToMove(getVal(nextPos)) && !(std::find(path.rbegin(), path.rend(), nextPos) != path.rend()))
-    {
-        result.emplace_back(nextPos);
-    }
-    return result;
-}*/
-
 inline MovePath getMovePath(PositionPath& posPath)
 {
     MovePath movePath;
@@ -184,129 +152,6 @@ inline MovePath getMovePath(PositionPath& posPath)
 }
 
 
-
-inline void getPaths(const Position& from, const Position& to, std::vector<MovePath>& outPaths)
-{
-    std::list<PositionPath> listOfPathsAsPositions;
-
-    if((getVal(from) != '#') &&
-            (getVal(to) != '#'))
-    {
-        bool exhausted = false;
-        bool foundAtLeastOnePath = false;
-        PositionPath initialPath;
-        initialPath.emplace_back(from);
-        listOfPathsAsPositions.emplace_back(initialPath);
-
-
-
-        while(!exhausted)
-        {
-            foundAtLeastOnePath = false;
-            for(std::list<PositionPath>::iterator positionPathIt = listOfPathsAsPositions.begin();
-                positionPathIt != listOfPathsAsPositions.end();
-                )
-            {
-
-                PositionPath positionPath = *positionPathIt;
-                std::list<PositionPath>::iterator positionPathItCopy = positionPathIt;
-                PositionVec possibleMoves;
-                if(positionPath.back() != to)
-                {
-                    //possibleMoves = getNextPossiblePositions(positionPath);
-                }
-                if(possibleMoves.size() > 0)
-                {
-                    foundAtLeastOnePath = true;
-                    for(Position& possibleMove : possibleMoves)
-                    {
-                        PositionPath newPath = positionPath;
-                        newPath.emplace_back(possibleMove);
-                        listOfPathsAsPositions.emplace_front(newPath);
-                        if(possibleMove == to)
-                        {
-                            outPaths.emplace_back(getMovePath(newPath));
-                        }
-                    }
-                    ++positionPathIt;
-                    listOfPathsAsPositions.erase(positionPathItCopy);
-                }
-                else
-                {
-                    ++positionPathIt;
-                }
-            }
-
-
-            if(!foundAtLeastOnePath)
-            {
-                exhausted = true;
-            }
-        }
-    }
-    //std::cerr << retVal.size() << " paths found." << std::endl;
-}
-
-inline int getExploredPercent(std::vector<char> vec)
-{
-    int fog = vec.size();
-    for(char c : vec)
-    {
-        if(c != '?')
-        {
-            fog--;
-        }
-    }
-    return (100*fog)/vec.size();
-}
-/*
-void getListOfPossibleExplorePoints(PositionVec& outPoints)
-{
-    for(size_t walk = 0; walk < level.size(); walk++)
-    {
-        Position currentPos = getPos(walk);
-        Position leftPos = moveRC(currentPos, Direction::LEFT);
-        Position rightPos = moveRC(currentPos, Direction::RIGHT);
-        Position upPos = moveRC(currentPos, Direction::UP);
-        Position downPos = moveRC(currentPos, Direction::DOWN);
-        if(getVal(currentPos) == '.')
-        {
-            if(getVal(leftPos) == '?')
-            {
-                    outPoints.emplace_back(currentPos);
-            }
-            if(getVal(rightPos) == '?')
-            {
-                    outPoints.emplace_back(currentPos);
-            }
-            if(getVal(upPos) == '?')
-            {
-                    outPoints.emplace_back(currentPos);
-            }
-            if(getVal(downPos) == '?')
-            {
-                    outPoints.emplace_back(currentPos);
-            }
-        }
-    }
-}*/
-
-inline MovePath& getShortestPath(std::vector<MovePath>& pathVec)
-{
-    size_t minSize = UINT32_MAX;
-    std::vector<MovePath>::iterator minIt;
-    for(std::vector<MovePath>::iterator pathWalk = pathVec.begin(); pathWalk != pathVec.end(); ++pathWalk)
-    {
-        size_t curPathSize = (*pathWalk).size();
-        if(curPathSize < minSize)
-        {
-            minSize = curPathSize;
-            minIt = pathWalk;
-        }
-    }
-    return *minIt;
-}
-
 void moveOnPath(MovePath& path, size_t& pathPos)
 {
     switch (path[pathPos])
@@ -328,18 +173,6 @@ void moveOnPath(MovePath& path, size_t& pathPos)
     }
     pathPos++;
 }
-
-void getBruteForceAllPaths (const PositionVec& explorePoints, std::vector<MovePath>& outPaths)
-{
-    outPaths.clear();
-    std::vector<MovePath> explorePathsForSinglePos;
-    for(const Position& pos : explorePoints)
-    {
-        explorePathsForSinglePos.clear();
-        getPaths(kirkPos, pos, outPaths);
-    }
-}
-
 struct Node;
 
 struct Node
@@ -425,6 +258,7 @@ struct Graph
                 {
                     case '?':
                     case '.':
+                    case 'T':
                         Node * childNode = currentNode->addChild(tempPos);
                         childNode->pathSoFar = currentNode->pathSoFar;
                         allNodesMap[getOffset(tempPos)] = childNode;
@@ -497,14 +331,10 @@ struct Graph
 
 inline MovePath getPathBFS(const Position& fromC, const Position& toT)
 {
-    MovePath outPath;
     Graph fromGraph(fromC);
     Graph toGraph(toT);
-    bool finished = false;
-    while(!finished)
+    while(1)
     {
-        fromGraph.growNetwork(false, true, false);
-        toGraph.growNetwork(false, false, true);
         for(std::list<Node*>::iterator currentNodeIt = fromGraph.leafNodes.begin();
             currentNodeIt != fromGraph.leafNodes.end();
             ++currentNodeIt)
@@ -522,8 +352,10 @@ inline MovePath getPathBFS(const Position& fromC, const Position& toT)
                 return getMovePath(fromPath);
             }
         }
+
+        fromGraph.growNetwork(false, false, false);
+        toGraph.growNetwork(false, false, false);
     }
-    return outPath;
 }
 
 inline MovePath getClosestExplorePath(const Position& from)
@@ -582,6 +414,11 @@ int main()
         if(!knowC)
         {
             currentPath = getClosestExplorePath(kirkPos);
+            currentPathPos = 0;
+        }
+        else if(posC != kirkPos)
+        {
+            currentPath = getPathBFS(kirkPos, posC);
             currentPathPos = 0;
         }
         else if(posC == kirkPos)
